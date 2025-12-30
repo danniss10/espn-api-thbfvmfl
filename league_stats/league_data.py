@@ -63,8 +63,10 @@ def get_pre_2019_scores(start_year: int) -> list:
                         'year': year,
                         'week': week + 1,
                         'team': owner_name,
+                        'team_id': team.team_id,
                         'score': score,
                         'opponent': opponent_name,
+                        'opponent_id': opponent.team_id if hasattr(opponent, 'team_id') else None,
                         'is_playoff': False,
                     })
         except Exception as e:
@@ -107,8 +109,10 @@ def get_2019_plus_scores(end_year: int) -> list:
                                 'year': year,
                                 'week': week,
                                 'team': home_name,
+                                'team_id': box.home_team.team_id,
                                 'score': box.home_score,
                                 'opponent': away_name,
+                                'opponent_id': box.away_team.team_id if box.away_team else None,
                                 'is_playoff': box.is_playoff,
                             })
 
@@ -125,8 +129,10 @@ def get_2019_plus_scores(end_year: int) -> list:
                                 'year': year,
                                 'week': week,
                                 'team': away_name,
+                                'team_id': box.away_team.team_id,
                                 'score': box.away_score,
                                 'opponent': home_name,
+                                'opponent_id': box.home_team.team_id if box.home_team else None,
                                 'is_playoff': box.is_playoff,
                             })
                 except Exception:
