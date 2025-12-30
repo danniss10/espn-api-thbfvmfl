@@ -24,6 +24,17 @@ if not LEAGUE_ID:
     sys.exit(1)
 
 
+def get_owner_name(team) -> str:
+    """Get consistent owner name from team, falling back to team name."""
+    if team.owners and len(team.owners) > 0:
+        owner = team.owners[0]
+        first = owner.get('firstName', '')
+        last = owner.get('lastName', '')
+        if first or last:
+            return f"{first} {last}".strip()
+    return team.team_name
+
+
 def get_pre_2019_scores(start_year: int) -> list:
     """Fetch scores for 2016-2018 using team.scores (regular season only)."""
     all_games = []
@@ -54,12 +65,13 @@ def get_pre_2019_scores(start_year: int) -> list:
                     if opponent == team or score is None or score == 0:
                         continue
 
-                    opponent_name = opponent.team_name if hasattr(opponent, 'team_name') else str(opponent)
+                    owner_name = get_owner_name(team)
+                    opponent_name = get_owner_name(opponent) if hasattr(opponent, 'owners') else str(opponent)
 
                     all_games.append({
                         'year': year,
                         'week': week + 1,
-                        'team': team.team_name,
+                        'team': owner_name,
                         'score': score,
                         'opponent': opponent_name,
                         'is_playoff': False,
@@ -93,8 +105,8 @@ def get_2019_plus_scores(end_year: int) -> list:
                     for box in box_scores:
                         # Home team score
                         if box.home_team and box.home_score and box.home_score > 0:
-                            home_name = box.home_team.team_name
-                            away_name = box.away_team.team_name if box.away_team else "BYE"
+                            home_name = get_owner_name(box.home_team)
+                            away_name = get_owner_name(box.away_team) if box.away_team else "BYE"
 
                             # Dedupe key for 2-week playoff matchups (same teams, same score)
                             matchup_key = (year, home_name, away_name, box.home_score, box.is_playoff)
@@ -113,8 +125,8 @@ def get_2019_plus_scores(end_year: int) -> list:
 
                         # Away team score
                         if box.away_team and box.away_score and box.away_score > 0:
-                            away_name = box.away_team.team_name
-                            home_name = box.home_team.team_name if box.home_team else "BYE"
+                            away_name = get_owner_name(box.away_team)
+                            home_name = get_owner_name(box.home_team) if box.home_team else "BYE"
 
                             matchup_key = (year, away_name, home_name, box.away_score, box.is_playoff)
                             if box.is_playoff and matchup_key in seen_matchups:
@@ -179,6 +191,21 @@ def main():
         print(f"{i:2}. {game['score']:6.2f} pts - {game['team']}")
         print(f"    Week {game['week']}, {game['year']} vs {game['opponent']}{playoff_marker}")
         print()
+
+    # 2 QB Era (2020+) lowest scores
+    two_qb_era_games = [g for g in all_games if g['year'] >= 2020]
+    if two_qb_era_games:
+        sorted_2qb = sorted(two_qb_era_games, key=lambda x: x['score'])
+        lowest_2qb = sorted_2qb[:top_n]
+
+        print("=" * 60)
+        print(f"LOWEST SINGLE-WEEK SCORES - 2 QB ERA (2020+, Bottom {top_n})")
+        print("=" * 60)
+        for i, game in enumerate(lowest_2qb, 1):
+            playoff_marker = " [P]" if game['is_playoff'] else ""
+            print(f"{i:2}. {game['score']:6.2f} pts - {game['team']}")
+            print(f"    Week {game['week']}, {game['year']} vs {game['opponent']}{playoff_marker}")
+            print()
 
     # Summary stats
     all_scores = [g['score'] for g in all_games]
