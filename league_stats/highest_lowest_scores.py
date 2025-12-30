@@ -158,7 +158,7 @@ def main():
     # Sort by score
     sorted_games = sorted(all_games, key=lambda x: x['score'], reverse=True)
 
-    top_n = 10
+    top_n = 25
     highest = sorted_games[:top_n]
     lowest = sorted_games[-top_n:][::-1]
 
