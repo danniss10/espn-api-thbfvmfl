@@ -40,3 +40,4 @@ python league_stats/highest_lowest_scores.py
 ## Available Scripts
 
 - `highest_lowest_scores.py` - Find the highest and lowest scoring games in league history
+- `score_distribution.py` - Visualize score distributions by year (box plot with mean, median, quartiles)
